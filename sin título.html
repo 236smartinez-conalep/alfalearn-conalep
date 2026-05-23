@@ -1,0 +1,1365 @@
+<!doctype html>
+<html lang="es" class="h-full">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AlfaLearn - CONALEP</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Fredoka',sans-serif;
+}
+
+body{
+overflow:hidden;
+height:100vh;
+background:
+radial-gradient(circle at top,#1e3a8a,#0f172a 70%);
+color:white;
+position:relative;
+}
+
+/* ESTRELLAS */
+
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background-image:
+radial-gradient(white 1px,transparent 1px);
+background-size:40px 40px;
+opacity:.15;
+animation:stars 20s linear infinite;
+pointer-events:none;
+}
+
+@keyframes stars{
+from{
+transform:translateY(0);
+}
+to{
+transform:translateY(40px);
+}
+}
+
+/* TITULO */
+
+.pixel{
+font-family:'Press Start 2P',cursive;
+}
+
+.glow{
+color:#facc15;
+text-shadow:
+0 0 10px #facc15,
+0 0 20px #facc15,
+0 0 40px #f59e0b;
+animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+50%{
+text-shadow:
+0 0 15px #facc15,
+0 0 35px #facc15,
+0 0 60px #f59e0b;
+}
+}
+
+/* TARJETAS */
+
+.card{
+background:rgba(255,255,255,.08);
+backdrop-filter:blur(12px);
+border:1px solid rgba(255,255,255,.15);
+border-radius:20px;
+transition:.3s;
+}
+
+.card:hover{
+transform:translateY(-6px);
+}
+
+/* BOTONES */
+
+.btn{
+transition:.3s;
+}
+
+.btn:hover{
+transform:scale(1.05);
+}
+
+.btn-play{
+background:
+linear-gradient(
+135deg,
+#facc15,
+#f59e0b
+);
+color:white;
+font-size:1.4rem;
+font-weight:bold;
+border:none;
+border-radius:20px;
+padding:18px 40px;
+box-shadow:
+0 10px 30px rgba(250,204,21,.4);
+cursor:pointer;
+}
+
+/* LOGOS */
+
+.logo-box{
+width:120px;
+height:120px;
+background:white;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:10px;
+box-shadow:
+0 0 20px #38bdf8;
+}
+
+/* ICONOS FLOTANTES */
+
+.float{
+position:absolute;
+font-size:50px;
+opacity:.35;
+animation:float 4s ease-in-out infinite;
+}
+
+.f1{
+top:12%;
+left:8%;
+}
+
+.f2{
+top:15%;
+right:8%;
+}
+
+.f3{
+bottom:20%;
+left:10%;
+}
+
+.f4{
+bottom:22%;
+right:10%;
+}
+
+@keyframes float{
+50%{
+transform:translateY(-15px);
+}
+}
+
+/* PANEL PRINCIPAL */
+
+.home-panel{
+height:100vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+gap:20px;
+text-align:center;
+padding:20px;
+}
+
+.subtitle{
+font-size:1.3rem;
+opacity:.9;
+}
+
+  </style>
+</head>
+
+<body>
+
+<div id="app"></div>
+
+<script>
+
+
+        /* =========================================================
+   CONFIGURACIÓN VISUAL Y COLORES
+========================================================= */
+
+        const config = {
+
+            title: "AlfaLearn",
+            subtitle: "CONALEP Estado de México",
+
+            primary:"",
+            secondary: "#4338ca",
+            success: "#16a34a",
+            danger: "#dc2626",
+
+        };
+
+        /* =========================================================
+   ESTADO DEL JUEGO
+========================================================= */
+
+        let currentView = "home";
+        let currentLevel = "";
+        let currentGame = "";
+
+        let gameState = {
+
+            score: 0,
+            round: 0,
+            lives: 3
+
+        };
+
+        /* =========================================================
+   ESTRUCTURA DE NIVELES Y MENÚS
+========================================================= */
+
+        const gamesByLevel = {
+
+            easy: [{
+                id: 'vowel_catch',
+                name: 'Atrapa Vocales',
+                emoji: '🎯'
+            },
+
+                {
+                    id: 'syllable_match',
+                    name: 'Une Sílabas',
+                    emoji: '🧩'
+                },
+
+                {
+                    id: 'letter_pop',
+                    name: 'Explota Letras',
+                    emoji: '💥'
+                }],
+
+            medium: [{
+                id: 'word_builder',
+                name: 'Constructor',
+                emoji: '🏗️'
+            },
+
+                {
+                    id: 'spelling_race',
+                    name: 'Carrera Ortográfica',
+                    emoji: '🏎️'
+                },
+
+                {
+                    id: 'word_snake',
+                    name: 'Serpiente',
+                    emoji: '🐍'
+                }],
+
+            hard: [{
+                id: 'sentence_order',
+                name: 'Ordena Frases',
+                emoji: '📝'
+            },
+
+                {
+                    id: 'grammar_invaders',
+                    name: 'Gramática',
+                    emoji: '👾'
+                },
+
+                {
+                    id: 'reading_challenge',
+                    name: 'Lectura',
+                    emoji: '📖'
+                },
+
+                {
+                    id: 'synonym_match',
+                    name: 'Sinónimos',
+                    emoji: '🔄'
+                },
+
+                {
+                    id: 'antonym_hunt',
+                    name: 'Antónimos',
+                    emoji: '🎯'
+                },
+
+                {
+                    id: 'text_analysis',
+                    name: 'Análisis',
+                    emoji: '📊'
+                },
+
+                {
+                    id: 'rhetoric_challenge',
+                    name: 'Retórica',
+                    emoji: '🎭'
+                },
+
+                {
+                    id: 'debate_simulator',
+                    name: 'Debate',
+                    emoji: '💬'
+                }]
+
+        };
+
+        /* =========================================================
+   CONTENIDO COMPLETO DE JUEGOS (EXPANDIDO)
+========================================================= */
+
+        const gameContent = {
+
+            vowel_catch: [{
+                question: 'A',
+                options: ['Vocal',
+                    'Consonante'],
+                answer: 'Vocal'
+            },
+                {
+                    question: 'M',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Consonante'
+                },
+                {
+                    question: 'E',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Vocal'
+                },
+                {
+                    question: 'T',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Consonante'
+                },
+                {
+                    question: 'I',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Vocal'
+                },
+                {
+                    question: 'P',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Consonante'
+                },
+                {
+                    question: 'O',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Vocal'
+                },
+                {
+                    question: 'S',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Consonante'
+                },
+                {
+                    question: 'U',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Vocal'
+                },
+                {
+                    question: 'R',
+                    options: ['Vocal',
+                        'Consonante'],
+                    answer: 'Consonante'
+                }],
+
+            syllable_match: [{
+                question: '¿Qué palabra forman?',
+                options: ['CASA',
+                    'MESA',
+                    'GATO'],
+                answer: 'CASA',
+                text: 'CA + SA'
+            },
+
+                {
+                    question: '¿Qué palabra forman?',
+                    options: ['PERRO',
+                        'PELO',
+                        'PECA'],
+                    answer: 'PELO',
+                    text: 'PE + LO'
+                },
+
+                {
+                    question: '¿Qué palabra forman?',
+                    options: ['MESA',
+                        'META',
+                        'MOTO'],
+                    answer: 'MESA',
+                    text: 'ME + SA'
+                },
+
+                {
+                    question: '¿Qué palabra forman?',
+                    options: ['MANO',
+                        'MAPA',
+                        'MALO'],
+                    answer: 'MANO',
+                    text: 'MA + NO'
+                },
+
+                {
+                    question: '¿Qué palabra forman?',
+                    options: ['PATO',
+                        'PALO',
+                        'PASO'],
+                    answer: 'PATO',
+                    text: 'PA + TO'
+                },
+
+                {
+                    question: '¿Qué palabra forman?',
+                    options: ['LIBRO',
+                        'LIMA',
+                        'LUNA'],
+                    answer: 'LUNA',
+                    text: 'LU + NA'
+                }],
+
+            letter_pop: [{
+                question: 'Selecciona una vocal',
+                options: ['A',
+                    'B',
+                    'C'],
+                answer: 'A'
+            },
+
+                {
+                    question: 'Selecciona una consonante',
+                    options: ['E',
+                        'I',
+                        'D'],
+                    answer: 'D'
+                },
+
+                {
+                    question: 'Selecciona una vocal',
+                    options: ['T',
+                        'O',
+                        'P'],
+                    answer: 'O'
+                },
+
+                {
+                    question: 'Selecciona una consonante',
+                    options: ['F',
+                        'U',
+                        'E'],
+                    answer: 'F'
+                },
+
+                {
+                    question: 'Selecciona una vocal',
+                    options: ['L',
+                        'M',
+                        'I'],
+                    answer: 'I'
+                },
+
+                {
+                    question: 'Selecciona una consonante',
+                    options: ['A',
+                        'X',
+                        'O'],
+                    answer: 'X'
+                }],
+
+            word_builder: [{
+                question: 'Ordena las letras',
+                text: 'SACA',
+                options: ['CASA',
+                    'SOPA',
+                    'MESA'],
+                answer: 'CASA'
+            },
+
+                {
+                    question: 'Ordena las letras',
+                    text: 'TOGA',
+                    options: ['GATO',
+                        'PATO',
+                        'GOTA'],
+                    answer: 'GATO'
+                },
+
+                {
+                    question: 'Ordena las letras',
+                    text: 'ROMA',
+                    options: ['AMOR',
+                        'ROMA',
+                        'RAMO'],
+                    answer: 'AMOR'
+                },
+
+                {
+                    question: 'Ordena las letras',
+                    text: 'OLPE',
+                    options: ['PELO',
+                        'POLO',
+                        'LOTE'],
+                    answer: 'PELO'
+                },
+
+                {
+                    question: 'Ordena las letras',
+                    text: 'RBALO',
+                    options: ['ARBOL',
+                        'BARCO',
+                        'ALBAR'],
+                    answer: 'ARBOL'
+                },
+
+                {
+                    question: 'Ordena las letras',
+                    text: 'ILBRO',
+                    options: ['LIBRO',
+                        'LIBRA',
+                        'BRILO'],
+                    answer: 'LIBRO'
+                }],
+
+            spelling_race: [{
+                question: '¿Cuál está bien escrita?',
+                options: ['Haber',
+                    'Aver'],
+                answer: 'Haber'
+            },
+
+                {
+                    question: '¿Cuál está bien escrita?',
+                    options: ['Casa',
+                        'Kaza'],
+                    answer: 'Casa'
+                },
+
+                {
+                    question: '¿Cuál está bien escrita?',
+                    options: ['Escuela',
+                        'Eskuela'],
+                    answer: 'Escuela'
+                },
+
+                {
+                    question: '¿Cuál está bien escrita?',
+                    options: ['Hacer',
+                        'Aser'],
+                    answer: 'Hacer'
+                },
+
+                {
+                    question: '¿Cuál está bien escrita?',
+                    options: ['Gente',
+                        'Jente'],
+                    answer: 'Gente'
+                },
+
+                {
+                    question: '¿Cuál está bien escrita?',
+                    options: ['Vaya',
+                        'Balla'],
+                    answer: 'Vaya'
+                },
+
+                {
+                    question: '¿Cuál está bien escrita?',
+                    options: ['Zapatos',
+                        'Sapatos'],
+                    answer: 'Zapatos'
+                }],
+
+            word_snake: [{
+                question: 'Lee la palabra',
+                text: 'SERPIENTE',
+                options: ['Correcto'],
+                answer: 'Correcto'
+            },
+
+                {
+                    question: 'Lee la palabra',
+                    text: 'ALFABETO',
+                    options: ['Correcto'],
+                    answer: 'Correcto'
+                },
+
+                {
+                    question: 'Lee la palabra',
+                    text: 'CONALEP',
+                    options: ['Correcto'],
+                    answer: 'Correcto'
+                },
+
+                {
+                    question: 'Lee la palabra',
+                    text: 'ESTUDIANTE',
+                    options: ['Correcto'],
+                    answer: 'Correcto'
+                },
+
+                {
+                    question: 'Lee la palabra',
+                    text: 'EDUCACION',
+                    options: ['Correcto'],
+                    answer: 'Correcto'
+                }],
+
+            sentence_order: [{
+                question: '¿Cuál es la oración correcta?',
+                options: [
+                    'Yo voy a la escuela',
+                    'Escuela voy yo'
+                ],
+                answer: 'Yo voy a la escuela'
+            },
+
+                {
+                    question: '¿Cuál es la oración correcta?',
+                    options: [
+                        'Ella lee un libro',
+                        'Libro ella lee'
+                    ],
+                    answer: 'Ella lee un libro'
+                },
+
+                {
+                    question: '¿Cuál es la oración correcta?',
+                    options: [
+                        'El perro corre rápido',
+                        'Rápido perro el corre'
+                    ],
+                    answer: 'El perro corre rápido'
+                },
+
+                {
+                    question: '¿Cuál es la oración correcta?',
+                    options: [
+                        'Nosotros estudiamos mucho',
+                        'Mucho estudiamos nosotros'
+                    ],
+                    answer: 'Nosotros estudiamos mucho'
+                },
+
+                {
+                    question: '¿Cuál es la oración correcta?',
+                    options: [
+                        'El sol brilla hoy',
+                        'Hoy sol el brilla'
+                    ],
+                    answer: 'El sol brilla hoy'
+                }],
+
+            grammar_invaders: [{
+                question: '¿La oración es correcta?',
+                text: 'El perro corre.',
+                options: ['Correcta',
+                    'Incorrecta'],
+                answer: 'Correcta'
+            },
+
+                {
+                    question: '¿La oración es correcta?',
+                    text: 'La gato duerme.',
+                    options: ['Correcta',
+                        'Incorrecta'],
+                    answer: 'Incorrecta'
+                },
+
+                {
+                    question: '¿La oración es correcta?',
+                    text: 'Los niños juegan afuera.',
+                    options: ['Correcta',
+                        'Incorrecta'],
+                    answer: 'Correcta'
+                },
+
+                {
+                    question: '¿La oración es correcta?',
+                    text: 'Ellos come manzanas.',
+                    options: ['Correcta',
+                        'Incorrecta'],
+                    answer: 'Incorrecta'
+                },
+
+                {
+                    question: '¿La oración es correcta?',
+                    text: 'Unas mariposas vuelan alto.',
+                    options: ['Correcta',
+                        'Incorrecta'],
+                    answer: 'Correcta'
+                },
+
+                {
+                    question: '¿La oración es correcta?',
+                    text: 'Mi mamá cocinan rico.',
+                    options: ['Correcta',
+                        'Incorrecta'],
+                    answer: 'Incorrecta'
+                }],
+
+            reading_challenge: [{
+                question: '¿Qué hace el sol?',
+                text: 'El sol brilla en el cielo.',
+                options: ['Brilla',
+                    'Corre',
+                    'Duerme'],
+                answer: 'Brilla'
+            },
+
+                {
+                    question: '¿Qué mejora la lectura?',
+                    text: 'La lectura mejora la imaginación.',
+                    options: ['La imaginación',
+                        'La lluvia',
+                        'El juego'],
+                    answer: 'La imaginación'
+                },
+
+                {
+                    question: '¿Quién vive en el río?',
+                    text: 'El pez pequeño vive feliz en las aguas del río.',
+                    options: ['El pez',
+                        'El oso',
+                        'El pájaro'],
+                    answer: 'El pez'
+                },
+
+                {
+                    question: '¿Qué le gusta a Carlos?',
+                    text: 'A Carlos le apasiona armar redes de computadoras en su clase.',
+                    options: ['Armar redes',
+                        'Jugar fútbol',
+                        'Cocinar postres'],
+                    answer: 'Armar redes'
+                },
+
+                {
+                    question: '¿Hacia dónde viajan las aves?',
+                    text: 'En otoño, las aves migran hacia lugares más cálidos.',
+                    options: ['Lugares cálidos',
+                        'El polo norte',
+                        'Las montañas'],
+                    answer: 'Lugares cálidos'
+                }],
+
+            synonym_match: [{
+                question: '¿Cuál es sinónimo de Feliz?',
+                options: ['Alegre',
+                    'Triste',
+                    'Lento'],
+                answer: 'Alegre'
+            },
+
+                {
+                    question: '¿Cuál es sinónimo de Grande?',
+                    options: ['Pequeño',
+                        'Enorme',
+                        'Débil'],
+                    answer: 'Enorme'
+                },
+
+                {
+                    question: '¿Cuál es sinónimo de Rápido?',
+                    options: ['Veloz',
+                        'Pausado',
+                        'Tranquilo'],
+                    answer: 'Veloz'
+                },
+
+                {
+                    question: '¿Cuál es sinónimo de Escuchar?',
+                    options: ['Oír',
+                        'Mirar',
+                        'Hablar'],
+                    answer: 'Oír'
+                },
+
+                {
+                    question: '¿Cuál es sinónimo de Estudiante?',
+                    options: ['Alumno',
+                        'Maestro',
+                        'Director'],
+                    answer: 'Alumno'
+                }],
+
+            antonym_hunt: [{
+                question: '¿Cuál es antónimo de Alto?',
+                options: ['Grande',
+                    'Bajo',
+                    'Rápido'],
+                answer: 'Bajo'
+            },
+
+                {
+                    question: '¿Cuál es antónimo de Frío?',
+                    options: ['Caliente',
+                        'Lento',
+                        'Oscuro'],
+                    answer: 'Caliente'
+                },
+
+                {
+                    question: '¿Cuál es antónimo de Día?',
+                    options: ['Tarde',
+                        'Noche',
+                        'Sol'],
+                    answer: 'Noche'
+                },
+
+                {
+                    question: '¿Cuál es antónimo de Mucho?',
+                    options: ['Poco',
+                        'Bastante',
+                        'Todo'],
+                    answer: 'Poco'
+                },
+
+                {
+                    question: '¿Cuál es antónimo de Encender?',
+                    options: ['Apagar',
+                        'Quemar',
+                        'Iluminar'],
+                    answer: 'Apagar'
+                }],
+
+            text_analysis: [{
+                question: '¿Cuál es la idea principal?',
+                text: 'Los niños juegan en el parque.',
+                options: [
+                    'Los niños juegan',
+                    'Está lloviendo',
+                    'Es de noche'
+                ],
+                answer: 'Los niños juegan'
+            },
+
+                {
+                    question: '¿Dónde ocurre?',
+                    text: 'La maestra enseña en la escuela.',
+                    options: [
+                        'En la playa',
+                        'En la escuela',
+                        'En el bosque'
+                    ],
+                    answer: 'En la escuela'
+                },
+
+                {
+                    question: '¿Cuál es el beneficio del deporte?',
+                    text: 'Hacer ejercicio diariamente fortalece el corazón y reduce el estrés.',
+                    options: [
+                        'Mejora la salud y bienestar',
+                        'Ayuda a dormir todo el día',
+                        'Sirve para ganar dinero'
+                    ],
+                    answer: 'Mejora la salud y bienestar'
+                },
+
+                {
+                    question: '¿Por qué son importantes las abejas?',
+                    text: 'Las abejas polinizan las plantas, permitiendo la producción de alimentos.',
+                    options: [
+                        'Producen picaduras',
+                        'Son vitales para el ecosistema',
+                        'Son insectos de colores'
+                    ],
+                    answer: 'Son vitales para el ecosistema'
+                },
+
+                {
+                    question: '¿Cuál es el objetivo del texto?',
+                    text: 'El agua potable es un recurso escaso; ciérrale a la llave mientras te lavas las manos.',
+                    options: [
+                        'Concientizar sobre el ahorro del agua',
+                        'Explicar cómo lavarse las manos',
+                        'Vender filtros de agua'
+                    ],
+                    answer: 'Concientizar sobre el ahorro del agua'
+                }],
+
+            rhetoric_challenge: [{
+                question: '¿Qué emoción transmite?',
+                text: 'La noche estaba triste y silenciosa.',
+                options: ['Alegría',
+                    'Tristeza',
+                    'Enojo'],
+                answer: 'Tristeza'
+            },
+
+                {
+                    question: '¿Qué intenta hacer el autor?',
+                    text: 'Debemos cuidar el planeta.',
+                    options: ['Convencer',
+                        'Asustar',
+                        'Ignorar'],
+                    answer: 'Convencer'
+                },
+
+                {
+                    question: '¿Qué figura retórica se usa?',
+                    text: 'Sus cabellos son de oro puro.',
+                    options: ['Metáfora',
+                        'Hipérbole',
+                        'Ironía'],
+                    answer: 'Metáfora'
+                },
+
+                {
+                    question: '¿Qué tono tiene el fragmento?',
+                    text: '¡Qué maravillosa sorpresa encontrarte por aquí el día de hoy!',
+                    options: ['Entusiasta',
+                        'Melancólico',
+                        'Indiferente'],
+                    answer: 'Entusiasta'
+                },
+
+                {
+                    question: '¿Qué figura representa una exageración?',
+                    text: 'Te lo he dicho un millón de veces.',
+                    options: ['Hipérbole',
+                        'Personificación',
+                        'Aliteración'],
+                    answer: 'Hipérbole'
+                }],
+
+            debate_simulator: [{
+                question: '¿La tecnología ayuda a estudiar?',
+                options: ['Sí, optimiza el acceso a la información',
+                    'No, genera demasiadas distracciones'],
+                answer: 'Sí, optimiza el acceso a la información'
+            },
+
+                {
+                    question: '¿Los videojuegos pueden educar?',
+                    options: ['Sí, desarrollan habilidades cognitivas',
+                        'No, solo fomentan el aislamiento'],
+                    answer: 'Sí, desarrollan habilidades cognitivas'
+                },
+
+                {
+                    question: '¿Cuál es el mejor argumento a favor de las energías limpias?',
+                    options: ['Reducen drásticamente el impacto ambiental',
+                        'Son más caras de instalar al principio'],
+                    answer: 'Reducen drásticamente el impacto ambiental'
+                },
+
+                {
+                    question: '¿Es mejor trabajar en equipo o individualmente?',
+                    options: ['En equipo, suma talentos y perspectivas',
+                        'Individualmente, para ir más rápido sin discutir'],
+                    answer: 'En equipo, suma talentos y perspectivas'
+                },
+
+                {
+                    question: 'Para defender un punto en un debate, ¿qué es lo más valioso?',
+                    options: ['Datos, evidencias y hechos verificables',
+                        'Hablar más fuerte que el oponente'],
+                    answer: 'Datos, evidencias y hechos verificables'
+                }]
+
+        };
+
+        /* =========================================================
+   VISTA: HOME
+========================================================= */
+
+        function renderHome() {
+
+            document.getElementById("app").innerHTML = `
+<div class="home-panel">
+
+<div class="float f1">🧠</div>
+<div class="float f2">🎓</div>
+<div class="float f3">📚</div>
+<div class="float f4">💡</div>
+
+            <div class="flex gap-4 mb-6">
+
+            <img
+            src="https://upload.wikimedia.org/wikipedia/commons/5/55/Conalep-logo.png"
+            width="80">
+
+            <img
+            src="https://upload.wikimedia.org/wikipedia/commons/e/eb/Emblema_del_Gobierno_del_Estado_de_M%C3%A9xico_per%C3%ADodo_2023-2029.png"
+            width="220">
+
+            </div>
+
+<h1 class="pixel glow">AlfaLearn</h1>
+
+
+<p class="subtitle">Aprende jugando</p>
+<p>CONALEP Estado de México</p>
+<button class="btn-play" onclick="renderLevels()">
+🎮 JUGAR
+</button>
+${config.primary}
+<div>
+`;
+}
+        /* =========================================================
+   VISTA: SELECCIÓN NIVELES
+========================================================= */
+
+        function renderLevels() {
+
+            currentView = "levels";
+
+            document.getElementById("app").innerHTML = `
+
+            <div class="min-h-screen p-6">
+
+            <button
+            onclick="renderHome()"
+            class="mb-6">
+
+            ← Volver
+
+            </button>
+
+            <h1 class="text-4xl font-bold mb-8 text-center">
+
+            Elige Nivel
+
+            </h1>
+
+            <div class="grid gap-4 max-w-md mx-auto">
+
+            <button
+            onclick="renderGames('easy')"
+            class="card p-6 rounded-3xl bg-green-600 text-2xl">
+
+            🌱 Fácil
+
+            </button>
+
+            <button
+            onclick="renderGames('medium')"
+            class="card p-6 rounded-3xl bg-yellow-500 text-black text-2xl">
+
+            🌿 Medio
+
+            </button>
+
+            <button
+            onclick="renderGames('hard')"
+            class="card p-6 rounded-3xl bg-red-600 text-2xl">
+
+            🌳 Difícil
+
+            </button>
+
+            </div>
+
+            </div>
+
+            `;
+        }
+
+        /* =========================================================
+   VISTA: SELECCIÓN JUEGOS
+========================================================= */
+
+        function renderGames(level) {
+
+            currentLevel = level;
+
+            const games = gamesByLevel[level];
+
+            document.getElementById("app").innerHTML = `
+
+            <div class="min-h-screen p-6">
+
+            <button
+            onclick="renderLevels()"
+            class="mb-6">
+
+            ← Volver
+
+            </button>
+
+            <h1 class="text-3xl font-bold mb-8 text-center">
+
+            Juegos
+
+            </h1>
+
+            <div class="grid gap-4 max-w-lg mx-auto">
+
+            ${games.map(game => `
+
+                <button
+                onclick="startGame('${game.id}')"
+                class="card p-5 rounded-3xl text-left"
+                style="background:${config.secondary}">
+
+                <span class="text-3xl">
+
+                ${game.emoji}
+
+                </span>
+
+                <span class="text-xl ml-3">
+
+                ${game.name}
+
+                </span>
+
+                </button>
+
+                `).join('')}
+
+            </div>
+
+            </div>
+
+            `;
+        }
+
+        /* =========================================================
+   FLUJO: INICIAR PARTIDA
+========================================================= */
+
+        function startGame(game) {
+
+            currentGame = game;
+
+            gameState = {
+
+                score: 0,
+                round: 0,
+                lives: 3
+
+            };
+
+            renderSimpleGame();
+        }
+
+        /* =========================================================
+   VISTA: ESTRUCTURA JUEGO EN CURSO
+========================================================= */
+
+        function renderSimpleGame() {
+
+            const data = gameContent[currentGame];
+
+            if (gameState.round >= data.length) {
+
+                finishGame();
+                return;
+
+            }
+
+            const item = data[gameState.round];
+
+            document.getElementById("app").innerHTML = `
+
+            <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+
+            <h1 class="text-4xl font-bold mb-6">
+
+            🎮 ${currentGame.replaceAll('_', ' ')}
+
+            </h1>
+
+            <div class="mb-4 text-xl">
+
+            ⭐ ${gameState.score}
+
+            </div>
+
+            <div class="mb-8 text-xl">
+
+            ❤️ ${gameState.lives}
+
+            </div>
+
+            <div class="w-full max-w-xl rounded-3xl p-8"
+            style="background:${config.secondary}">
+
+            ${renderGameContent(item)}
+
+            </div>
+
+            </div>
+
+            `;
+        }
+
+        /* =========================================================
+   RENDER DEL CONTENIDO DINÁMICO (PREGUNTA + RECUADRO OPCIONES)
+========================================================= */
+
+        function renderGameContent(item) {
+
+            return `
+
+            <div>
+
+            <h2 class="text-2xl font-bold mb-4">
+
+            ${item.question}
+
+            </h2>
+
+            ${item.text ? `
+
+            <div class="bg-black/30 p-4 rounded-2xl mb-6 text-xl">
+
+            ${item.text}
+
+            </div>
+
+            `: ''}
+
+            <!-- Apartado de recuadro para las opciones -->
+            <div id="options-container" class="flex flex-col gap-4 p-4 bg-black/20 rounded-2xl border border-indigo-500/30">
+
+            ${item.options.map(option => `
+
+                <button
+                onclick="checkAnswer(this, '${option}', '${item.answer}')"
+                class="btn bg-indigo-700 hover:bg-indigo-500 p-4 rounded-2xl text-lg w-full font-medium text-white shadow-md">
+
+                ${option}
+
+                </button>
+
+                `).join('')}
+
+            </div>
+            <!-- Recuadro para marcar si la respuesta es Correcta o Incorrecta -->
+            <div id="feedback-box" class="mt-6 hidden p-4 rounded-2xl text-xl font-bold transition-all duration-300"></div>
+
+            </div>
+
+            `;
+        }
+
+        /* =========================================================
+   PROCESAMIENTO DE RESPUESTAS Y FEEDBACK VISUAL
+========================================================= */
+
+        function checkAnswer(buttonElement, selected, correct) {
+
+            // Desactivar todos los botones para evitar clicks múltiples durante la animación
+            const buttons = document.querySelectorAll("#options-container button");
+            buttons.forEach(btn => btn.disabled = true);
+
+            const feedbackBox = document.getElementById("feedback-box");
+            feedbackBox.classList.remove("hidden");
+
+            if (selected === correct) {
+
+                // Opción seleccionada se ilumina en verde
+                buttonElement.style.backgroundColor = config.success;
+
+                // Configuración visual del recuadro de estado (Fondo verde opaco)
+                feedbackBox.style.backgroundColor = "rgba(22, 163, 74, 0.2)";
+                feedbackBox.style.border = `2px solid ${config.success}`;
+                feedbackBox.style.color = "#4ade80";
+                feedbackBox.innerHTML = "✨ ¡Correcto! +10 puntos";
+
+                gameState.score += 10;
+
+            } else {
+
+                // Opción seleccionada se ilumina en rojo
+                buttonElement.style.backgroundColor = config.danger;
+
+                // Se le muestra al alumno sutilmente cuál era la correcta marcándola en verde
+                buttons.forEach(btn => {
+                    if (btn.innerText.trim() === correct) {
+                        btn.style.backgroundColor = config.success;
+                    }
+                });
+
+                // Configuración visual del recuadro de estado (Fondo rojo opaco)
+                feedbackBox.style.backgroundColor = "rgba(220, 38, 38, 0.2)";
+                feedbackBox.style.border = `2px solid ${config.danger}`;
+                feedbackBox.style.color = "#f87171";
+                feedbackBox.innerHTML = "❌ ¡Incorrecto! Perdiste una vida";
+                gameState.lives--;
+            }
+            // Avanzar la ronda
+            gameState.round++;
+
+            // Pausa de 1.2 segundos para asimilar la respuesta antes de redibujar la pantalla
+            setTimeout(()=> {
+
+                if (gameState.lives <= 0 || gameState.round >= gameContent[currentGame].length) {
+                    finishGame();
+                } else {
+                    renderSimpleGame();
+                }
+            },
+                1200);
+        }
+        /* =========================================================
+   VISTA: PANTALLA FINAL
+========================================================= */
+
+        function finishGame() {
+
+            document.getElementById("app").innerHTML = `
+
+            <div class="min-h-screen flex flex-col items-center justify-center text-center p-6">
+
+            <h1 class="text-5xl font-bold mb-6">
+
+            🎉 Juego Terminado
+
+            </h1>
+
+            <div class="text-3xl mb-8">
+
+            ⭐ ${gameState.score} puntos
+
+            </div>
+            <div class="flex gap-4">
+            <button
+            onclick="startGame(currentGame)"
+            class="btn bg-green-600 px-6 py-3 rounded-2xl">
+            Reintentar
+            </button>
+            <button
+            onclick="renderGames(currentLevel)"
+            class="btn bg-indigo-700 px-6 py-3 rounded-2xl">
+            Volver
+            </button>
+            </div>
+            </div>
+            `;
+        }
+        /* =========================================================
+   ARRANQUE DE LA APLICACIÓN
+========================================================= */
+
+        renderHome();
+
+    </script>
+
+</body>
+</html>
